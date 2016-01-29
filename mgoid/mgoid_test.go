@@ -1,11 +1,9 @@
 package mgoid
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestGenerateID(t *testing.T) {
-	incID, err := NewIncID("mongodb://192.168.33.70:27017", "ant")
+	incID, err := NewIncIDWithURL("mongodb://192.168.33.70:27017", "ant")
 	if err != nil {
 		t.Error(err)
 		return

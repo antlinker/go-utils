@@ -5,6 +5,10 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const (
+	_GCollectionName = "counters"
+)
+
 // IncID 增量ID
 type IncID struct {
 	session *mgo.Session
@@ -12,23 +16,38 @@ type IncID struct {
 	c       *mgo.Collection
 }
 
-// NewIncID 创建IncID的实例
-func NewIncID(mgoURL, dbName string) (*IncID, error) {
-	return NewIncIDWithC(mgoURL, dbName, "counters")
+// NewIncIDWithURL 创建IncID的实例
+func NewIncIDWithURL(url, dbName string) (*IncID, error) {
+	return NewIncIDWithURLC(url, dbName, _GCollectionName)
 }
 
-// NewIncIDWithC 创建IncID的实例(提供存储的集合名称)
-func NewIncIDWithC(mgoURL, dbName, cName string) (*IncID, error) {
-	session, err := mgo.Dial(mgoURL)
+// NewIncIDWithURLC 创建IncID的实例
+func NewIncIDWithURLC(url, dbName, cName string) (*IncID, error) {
+	session, err := mgo.Dial(url)
 	if err != nil {
 		return nil, err
 	}
 	db := session.DB(dbName)
+	return NewIncIDWithSession(session, db, cName), nil
+}
+
+// NewIncID 创建IncID的实例
+func NewIncID(db *mgo.Database) *IncID {
+	return NewIncIDWithDB(db, _GCollectionName)
+}
+
+// NewIncIDWithDB 创建IncID的实例
+func NewIncIDWithDB(db *mgo.Database, cName string) *IncID {
+	return NewIncIDWithSession(db.Session.Clone(), db, cName)
+}
+
+// NewIncIDWithSession 创建IncID的实例
+func NewIncIDWithSession(session *mgo.Session, db *mgo.Database, cName string) *IncID {
 	return &IncID{
 		session: session,
 		db:      db,
 		c:       db.C(cName),
-	}, nil
+	}
 }
 
 // GenerateID 生成自增ID
@@ -46,7 +65,6 @@ func (i *IncID) GenerateID(name string) (id int64, err error) {
 	return
 }
 
-// Close 关闭会话
 func (i *IncID) Close() {
 	i.session.Close()
 }
